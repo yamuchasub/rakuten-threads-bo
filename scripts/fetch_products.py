@@ -81,7 +81,6 @@ def fetch_rakuten(keyword, page=1):
         "keyword": keyword,
         "hits": 30,
         "page": page,
-        "sort": "-reviewAverage",
         "format": "json",
     }
 
