@@ -76,7 +76,7 @@ def fetch_rakuten(keyword, page=1):
     url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
 
     params = {
-        "applicationId": RAKUTEN_APP_ID,
+        "accessKey": RAKUTEN_APP_ID,
         "keyword": keyword,
         "hits": 30,
         "page": page,
