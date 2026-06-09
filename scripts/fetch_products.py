@@ -77,7 +77,6 @@ def fetch_rakuten(keyword, page=1):
 
     params = {
         "applicationId": RAKUTEN_APP_ID,
-        "affiliateId": RAKUTEN_AFFILIATE_ID,
         "keyword": keyword,
         "hits": 30,
         "page": page,
