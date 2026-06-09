@@ -84,6 +84,10 @@ def fetch_rakuten(keyword, page=1):
     }
 
     r = requests.get(url, params=params, timeout=20)
+    
+    print("STATUS:", r.status_code)
+    print("BODY:", r.text)
+    
     r.raise_for_status()
     data = r.json()
 
