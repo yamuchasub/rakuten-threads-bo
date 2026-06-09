@@ -38,6 +38,12 @@ def product_exists(item_code):
         "select": "item_code",
     }
     r = requests.get(url, headers=supabase_headers(), params=params, timeout=20)
+    
+    if r.status_code != 200:
+    print("Rakuten API Error")
+    print("Status:", r.status_code)
+    print("Response:", r.text)
+    
     r.raise_for_status()
     return len(r.json()) > 0
 
