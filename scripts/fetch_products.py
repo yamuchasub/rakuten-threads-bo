@@ -82,7 +82,6 @@ def fetch_rakuten(keyword, page=1):
         "hits": 30,
         "page": page,
         "format": "json",
-        "httpReferrer": "github.com",
     }
     headers = {
         "Referer": "github.com",
