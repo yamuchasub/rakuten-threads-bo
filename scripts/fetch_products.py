@@ -96,10 +96,10 @@ r = requests.get(
     timeout=20
 )
 
-    print("STATUS:", r.status_code)
-    print("BODY:", r.text)
+print("STATUS:", r.status_code)
+print("BODY:", r.text)
 
-    r.raise_for_status()
+r.raise_for_status()
     data = r.json()
 
     return [x["Item"] for x in data.get("Items", [])]
