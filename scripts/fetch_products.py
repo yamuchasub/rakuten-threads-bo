@@ -10,6 +10,7 @@ DISCORD_CHANNEL_ID = os.environ["DISCORD_CHANNEL_ID"]
 
 RAKUTEN_APP_ID = os.environ["RAKUTEN_APP_ID"]
 RAKUTEN_AFFILIATE_ID = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
+RAKUTEN_ACCESS_KEY = os.environ["RAKUTEN_ACCESS_KEY"]
 
 KEYWORDS = [
     "無印良品 公式",
@@ -73,10 +74,11 @@ def save_product(item, discord_message_id):
 
 
 def fetch_rakuten(keyword, page=1):
-    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
+    url = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401"
 
     params = {
-        "accessKey": RAKUTEN_APP_ID,
+        "applicationId": RAKUTEN_APP_ID,
+        "accessKey": RAKUTEN_ACCESS_KEY,
         "keyword": keyword,
         "hits": 30,
         "page": page,
@@ -84,10 +86,10 @@ def fetch_rakuten(keyword, page=1):
     }
 
     r = requests.get(url, params=params, timeout=20)
-    
+
     print("STATUS:", r.status_code)
     print("BODY:", r.text)
-    
+
     r.raise_for_status()
     data = r.json()
 
