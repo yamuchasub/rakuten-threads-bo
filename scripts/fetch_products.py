@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from datetime import datetime, timezone
 
@@ -20,7 +21,7 @@ KEYWORDS = [
     "防災 ライト",
 ]
 
-MAX_POSTS = 30
+MAX_POSTS = 15
 
 def get_image_urls(item, max_images=20):
     urls = []
@@ -210,6 +211,7 @@ def main():
             save_product(item, message_id)
 
             posted += 1
+            time.sleep(2)
 
     print(f"Posted {posted} products to Discord.")
 
