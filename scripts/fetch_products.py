@@ -124,6 +124,11 @@ def fetch_rakuten(keyword, page=1):
 
     data = r.json()
 
+    import json
+
+    print("===== FIRST ITEM =====")
+    print(json.dumps(data["Items"][0]["Item"], ensure_ascii=False, indent=2))
+
     return [x["Item"] for x in data.get("Items", [])]
 
 
