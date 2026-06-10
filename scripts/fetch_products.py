@@ -85,7 +85,16 @@ def fetch_rakuten(keyword, page=1):
         "format": "json",
     }
 
-    r = requests.get(url, params=params, timeout=20)
+    headers = {
+    "Referer": "https://github.com/"
+}
+
+r = requests.get(
+    url,
+    params=params,
+    headers=headers,
+    timeout=20
+)
 
     print("STATUS:", r.status_code)
     print("BODY:", r.text)
