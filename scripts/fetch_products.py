@@ -72,7 +72,6 @@ def save_product(item, discord_message_id):
     r = requests.post(url, headers=supabase_headers(), json=payload, timeout=20)
     r.raise_for_status()
 
-
 def fetch_rakuten(keyword, page=1):
     url = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401"
 
@@ -86,20 +85,20 @@ def fetch_rakuten(keyword, page=1):
     }
 
     headers = {
-    "Referer": "https://github.com/"
-}
+        "Referer": "https://github.com/"
+    }
 
-r = requests.get(
-    url,
-    params=params,
-    headers=headers,
-    timeout=20
-)
+    r = requests.get(
+        url,
+        params=params,
+        headers=headers,
+        timeout=20
+    )
 
-print("STATUS:", r.status_code)
-print("BODY:", r.text)
+    print("STATUS:", r.status_code)
+    print("BODY:", r.text)
 
-r.raise_for_status()
+    r.raise_for_status()
     data = r.json()
 
     return [x["Item"] for x in data.get("Items", [])]
