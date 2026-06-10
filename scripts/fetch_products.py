@@ -22,6 +22,24 @@ KEYWORDS = [
 
 MAX_POSTS = 30
 
+def get_image_urls(item, max_images=20):
+    urls = []
+
+    for img in item.get("mediumImageUrls", []):
+        url = img.get("imageUrl", "")
+        if not url:
+            continue
+
+        url = url.replace("?_ex=128x128", "")
+        url = url.replace("?_ex=64x64", "")
+
+        if url not in urls:
+            urls.append(url)
+
+        if len(urls) >= max_images:
+            break
+
+    return urls
 
 def supabase_headers():
     return {
@@ -52,9 +70,8 @@ def product_exists(item_code):
 def save_product(item, discord_message_id):
     url = f"{SUPABASE_URL}/rest/v1/products"
 
-    image_url = ""
-    if item.get("mediumImageUrls"):
-        image_url = item["mediumImageUrls"][0]["imageUrl"].replace("?_ex=128x128", "")
+    image_urls = get_image_urls(item, max_images=20)
+    image_url = image_urls[0] if image_urls else ""
 
     payload = {
         "item_code": item.get("itemCode"),
@@ -63,6 +80,10 @@ def save_product(item, discord_message_id):
         "review_average": float(item.get("reviewAverage") or 0),
         "review_count": int(item.get("reviewCount") or 0),
         "image_url": image_url,
+        "image_urls": image_urls,
+        "image_count": len(image_urls),
+        "selected_images": [1, 2, 3] if len(image_urls) >= 3 else list(range(1, len(image_urls) + 1)),
+        "cover_image_index": 1,
         "affiliate_url": item.get("affiliateUrl") or item.get("itemUrl"),
         "status": "new",
         "discord_message_id": discord_message_id,
@@ -107,9 +128,8 @@ def fetch_rakuten(keyword, page=1):
 
 
 def post_to_discord(item):
-    image_url = ""
-    if item.get("mediumImageUrls"):
-        image_url = item["mediumImageUrls"][0]["imageUrl"].replace("?_ex=128x128", "")
+    image_urls = get_image_urls(item, max_images=20)
+    image_url = image_urls[0] if image_urls else ""
 
     title = item.get("itemName", "")[:250]
     url = item.get("affiliateUrl") or item.get("itemUrl")
@@ -119,7 +139,9 @@ def post_to_discord(item):
         "url": url,
         "description": (
             f"価格：{item.get('itemPrice')}円\n"
-            f"レビュー：{item.get('reviewAverage')} / {item.get('reviewCount')}件\n\n"
+            f"レビュー：{item.get('reviewAverage')} / {item.get('reviewCount')}件\n"
+            f"画像枚数：{len(image_urls)}枚\n"
+            f"初期使用画像：1,2,3\n\n"
             f"👍で投稿候補に追加"
         ),
         "footer": {
