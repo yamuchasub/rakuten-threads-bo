@@ -85,15 +85,16 @@ def fetch_rakuten(keyword, page=1):
     }
 
     headers = {
-        "Referer": "https://github.com/"
-    }
+    "referer": "https://github.com",
+    "User-Agent": "Mozilla/5.0"
+}
 
-    r = requests.get(
-        url,
-        params=params,
-        headers=headers,
-        timeout=20
-    )
+r = requests.get(
+    url,
+    params=params,
+    headers=headers,
+    timeout=20
+)
 
     print("STATUS:", r.status_code)
     print("BODY:", r.text)
