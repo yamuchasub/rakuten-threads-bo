@@ -1,0 +1,13 @@
+name: Get Threads User
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get-user:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Threads user id
+        run: |
+          curl -X GET "https://graph.threads.net/v1.0/me?fields=id,username&access_token=${{ secrets.THREADS_ACCESS_TOKEN }}"
