@@ -32,29 +32,29 @@ def get_new_products():
     r.raise_for_status()
     return r.json()
 
-
 def has_thumbs_up(message_id):
     url = f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages/{message_id}"
 
     headers = {
-    "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
-}
+        "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
+    }
 
-time.sleep(1)
+    time.sleep(1)
 
-r = requests.get(url, headers=headers, timeout=20)
+    r = requests.get(url, headers=headers, timeout=20)
     r.raise_for_status()
+
     message = r.json()
 
     reactions = message.get("reactions", [])
 
     for reaction in reactions:
         emoji = reaction.get("emoji", {})
+
         if emoji.get("name") == "👍" and reaction.get("count", 0) >= 1:
             return True
 
     return False
-
 
 def approve_product(item_code):
     url = f"{SUPABASE_URL}/rest/v1/products"
