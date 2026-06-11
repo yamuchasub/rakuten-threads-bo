@@ -218,7 +218,7 @@ def publish_container(creation_id):
 def reply_with_affiliate(parent_post_id, affiliate_url):
     url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
 
-    text = f"PR・楽天アフィリエイトリンク\n{affiliate_url}"
+    text = f"{affiliate_url} pr"
 
     payload = {
         "media_type": "TEXT",
