@@ -1,9 +1,13 @@
 import os
+import time
 import requests
+from datetime import datetime, timezone
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+THREADS_ACCESS_TOKEN = os.environ["THREADS_ACCESS_TOKEN"]
+THREADS_USER_ID = os.environ["THREADS_USER_ID"]
 
 
 def supabase_headers():
@@ -11,58 +15,37 @@ def supabase_headers():
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
+        "Prefer": "return=representation",
     }
 
 
 def get_approved_product():
     url = f"{SUPABASE_URL}/rest/v1/products"
-
     params = {
         "status": "eq.approved",
         "select": "*",
         "limit": "1",
+        "order": "approved_at.asc",
     }
-
-    r = requests.get(
-        url,
-        headers=supabase_headers(),
-        params=params,
-        timeout=20,
-    )
-
+    r = requests.get(url, headers=supabase_headers(), params=params, timeout=20)
     r.raise_for_status()
-
     rows = r.json()
-
-    if not rows:
-        return None
-
-    return rows[0]
+    return rows[0] if rows else None
 
 
 def get_recent_posts():
     url = f"{SUPABASE_URL}/rest/v1/posts"
-
     params = {
         "select": "post_text",
         "order": "posted_at.desc",
         "limit": "30",
     }
-
-    r = requests.get(
-        url,
-        headers=supabase_headers(),
-        params=params,
-        timeout=20,
-    )
-
+    r = requests.get(url, headers=supabase_headers(), params=params, timeout=20)
     r.raise_for_status()
-
     return [x["post_text"] for x in r.json()]
 
 
 def generate_text(product, recent_posts):
-
     recent_text = "\n".join(recent_posts)
 
     prompt = f"""
@@ -79,10 +62,11 @@ def generate_text(product, recent_posts):
 レビュー: {product["review_average"]}
 
 作成条件:
-- 60~80文字
+- 60〜80文字
 - 発見メモ風
 - 売り込み感を出さない
 - 商品名は使わない
+-商品価格は使わない
 - ブランド名のみ使用可
 - 画像を見たくなる一言にする
 - 商品説明をしすぎない
@@ -108,25 +92,205 @@ def generate_text(product, recent_posts):
         "contents": [
             {
                 "parts": [
-                    {
-                        "text": prompt
-                    }
+                    {"text": prompt}
                 ]
             }
         ]
     }
 
     r = requests.post(url, json=payload, timeout=60)
-
     r.raise_for_status()
 
     data = r.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
-    return data["candidates"][0]["content"]["parts"][0]["text"]
+
+def get_selected_image_urls(product):
+    image_urls = product.get("image_urls") or []
+    selected = product.get("selected_images") or []
+
+    if not image_urls:
+        return []
+
+    if not selected:
+        selected = [1, 2, 3]
+
+    urls = []
+
+    for index in selected:
+        try:
+            i = int(index) - 1
+        except Exception:
+            continue
+
+        if 0 <= i < len(image_urls):
+            urls.append(image_urls[i])
+
+    return urls[:10]
+
+
+def create_image_container(image_url):
+    url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+
+    payload = {
+        "media_type": "IMAGE",
+        "image_url": image_url,
+        "is_carousel_item": "true",
+    }
+
+    r = requests.post(
+        url,
+        params={"access_token": THREADS_ACCESS_TOKEN},
+        data=payload,
+        timeout=30,
+    )
+
+    print("IMAGE CONTAINER:", r.status_code, r.text)
+    r.raise_for_status()
+
+    return r.json()["id"]
+
+
+def create_carousel_container(text, image_container_ids):
+    url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+
+    payload = {
+        "media_type": "CAROUSEL",
+        "children": ",".join(image_container_ids),
+        "text": text,
+    }
+
+    r = requests.post(
+        url,
+        params={"access_token": THREADS_ACCESS_TOKEN},
+        data=payload,
+        timeout=30,
+    )
+
+    print("CAROUSEL CONTAINER:", r.status_code, r.text)
+    r.raise_for_status()
+
+    return r.json()["id"]
+
+
+def create_single_image_container(text, image_url):
+    url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+
+    payload = {
+        "media_type": "IMAGE",
+        "image_url": image_url,
+        "text": text,
+    }
+
+    r = requests.post(
+        url,
+        params={"access_token": THREADS_ACCESS_TOKEN},
+        data=payload,
+        timeout=30,
+    )
+
+    print("SINGLE IMAGE CONTAINER:", r.status_code, r.text)
+    r.raise_for_status()
+
+    return r.json()["id"]
+
+
+def publish_container(creation_id):
+    url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
+
+    payload = {
+        "creation_id": creation_id,
+    }
+
+    r = requests.post(
+        url,
+        params={"access_token": THREADS_ACCESS_TOKEN},
+        data=payload,
+        timeout=30,
+    )
+
+    print("PUBLISH:", r.status_code, r.text)
+    r.raise_for_status()
+
+    return r.json()["id"]
+
+
+def reply_with_affiliate(parent_post_id, affiliate_url):
+    url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+
+    text = f"PR・楽天アフィリエイトリンク\n{affiliate_url}"
+
+    payload = {
+        "media_type": "TEXT",
+        "text": text,
+        "reply_to_id": parent_post_id,
+    }
+
+    create_res = requests.post(
+        url,
+        params={"access_token": THREADS_ACCESS_TOKEN},
+        data=payload,
+        timeout=30,
+    )
+
+    print("REPLY CONTAINER:", create_res.status_code, create_res.text)
+    create_res.raise_for_status()
+
+    creation_id = create_res.json()["id"]
+
+    time.sleep(3)
+
+    return publish_container(creation_id)
+
+
+def update_product_posted(item_code, threads_post_id):
+    url = f"{SUPABASE_URL}/rest/v1/products"
+
+    params = {
+        "item_code": f"eq.{item_code}",
+    }
+
+    payload = {
+        "status": "posted",
+        "posted_at": datetime.now(timezone.utc).isoformat(),
+        "threads_post_id": threads_post_id,
+    }
+
+    r = requests.patch(
+        url,
+        headers=supabase_headers(),
+        params=params,
+        json=payload,
+        timeout=20,
+    )
+
+    r.raise_for_status()
+
+
+def save_post_history(product, post_text, threads_post_id, reply_post_id):
+    url = f"{SUPABASE_URL}/rest/v1/posts"
+
+    payload = {
+        "item_code": product["item_code"],
+        "post_text": post_text,
+        "tone_type": "discovery",
+        "emoji_used": "",
+        "threads_post_id": threads_post_id,
+        "reply_post_id": reply_post_id,
+        "posted_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    r = requests.post(
+        url,
+        headers=supabase_headers(),
+        json=payload,
+        timeout=20,
+    )
+
+    r.raise_for_status()
 
 
 def main():
-
     product = get_approved_product()
 
     if not product:
@@ -134,14 +298,54 @@ def main():
         return
 
     recent_posts = get_recent_posts()
+    post_text = generate_text(product, recent_posts)
 
-    text = generate_text(
-        product,
-        recent_posts
+    print("POST TEXT:")
+    print(post_text)
+
+    image_urls = get_selected_image_urls(product)
+
+    if not image_urls:
+        raise Exception("No image URLs found")
+
+    if len(image_urls) == 1:
+        creation_id = create_single_image_container(post_text, image_urls[0])
+    else:
+        child_ids = []
+
+        for image_url in image_urls:
+            child_id = create_image_container(image_url)
+            child_ids.append(child_id)
+            time.sleep(2)
+
+        creation_id = create_carousel_container(post_text, child_ids)
+
+    time.sleep(5)
+
+    threads_post_id = publish_container(creation_id)
+
+    time.sleep(5)
+
+    reply_post_id = reply_with_affiliate(
+        threads_post_id,
+        product["affiliate_url"],
     )
 
-    print("=== GENERATED ===")
-    print(text)
+    update_product_posted(
+        product["item_code"],
+        threads_post_id,
+    )
+
+    save_post_history(
+        product,
+        post_text,
+        threads_post_id,
+        reply_post_id,
+    )
+
+    print("DONE")
+    print("THREADS_POST_ID:", threads_post_id)
+    print("REPLY_POST_ID:", reply_post_id)
 
 
 if __name__ == "__main__":
