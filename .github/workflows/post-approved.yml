@@ -22,4 +22,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-    THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
