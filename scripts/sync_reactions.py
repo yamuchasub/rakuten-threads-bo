@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from datetime import datetime, timezone
 
@@ -24,7 +25,7 @@ def get_new_products():
         "status": "eq.new",
         "discord_message_id": "not.is.null",
         "select": "item_code,discord_message_id",
-        "limit": "100",
+        "limit": "20",
     }
 
     r = requests.get(url, headers=supabase_headers(), params=params, timeout=20)
@@ -36,10 +37,12 @@ def has_thumbs_up(message_id):
     url = f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages/{message_id}"
 
     headers = {
-        "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
-    }
+    "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
+}
 
-    r = requests.get(url, headers=headers, timeout=20)
+time.sleep(1)
+
+r = requests.get(url, headers=headers, timeout=20)
     r.raise_for_status()
     message = r.json()
 
