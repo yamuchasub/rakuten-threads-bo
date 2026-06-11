@@ -8,7 +8,7 @@ url = f"https://graph.threads.net/v1.0/{USER_ID}/threads"
 
 payload = {
     "media_type": "TEXT",
-    "text": "楽天Threads Bot テスト投稿🚀"
+    "text": "🚀"
 }
 
 r = requests.post(
