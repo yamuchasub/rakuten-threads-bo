@@ -45,6 +45,9 @@ def has_thumbs_up(message_id):
     r.raise_for_status()
 
     message = r.json()
+    
+    print("MESSAGE_ID:", message_id)
+    print("REACTIONS:", message.get("reactions", []))
 
     reactions = message.get("reactions", [])
 
