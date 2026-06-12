@@ -24,8 +24,9 @@ def get_new_products():
     params = {
         "status": "eq.new",
         "discord_message_id": "not.is.null",
-        "select": "item_code,discord_message_id",
-        "limit": "20",
+        "select": "item_code,discord_message_id,created_at",
+        "order": "created_at.desc",
+        "limit": "100",
     }
 
     r = requests.get(url, headers=supabase_headers(), params=params, timeout=20)
