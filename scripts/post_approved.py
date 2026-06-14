@@ -337,7 +337,7 @@ def main():
     else:
         child_ids = []
 
-        for image_url in image_urls:
+    for image_url in image_urls:
     try:
         child_id = create_image_container(image_url)
         child_ids.append(child_id)
