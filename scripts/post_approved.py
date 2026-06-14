@@ -267,7 +267,7 @@ def reply_with_affiliate(parent_post_id, affiliate_url):
     return publish_container(creation_id)
 
 
-def update_product_posted(item_code, threads_post_id):
+def update_product_posted(item_code, threads_post_id=None, status="posted"):
     url = f"{SUPABASE_URL}/rest/v1/products"
 
     params = {
@@ -275,10 +275,12 @@ def update_product_posted(item_code, threads_post_id):
     }
 
     payload = {
-        "status": "posted",
+        "status": status,
         "posted_at": datetime.now(timezone.utc).isoformat(),
-        "threads_post_id": threads_post_id,
     }
+
+if threads_post_id:
+    payload["threads_post_id"] = threads_post_id
 
     r = requests.patch(
         url,
@@ -347,8 +349,15 @@ def main():
             print("SKIP REASON:", e)
 
     if not child_ids:
-        raise Exception("All image containers failed")
+        print("SKIP PRODUCT:", product["item_code"])
 
+        update_product_posted(
+            product["item_code"],
+            status="posted",
+        )
+
+        return
+    
     creation_id = create_carousel_container(post_text, child_ids)
 
     time.sleep(5)
