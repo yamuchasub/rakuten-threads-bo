@@ -338,19 +338,18 @@ def main():
         child_ids = []
 
     for image_url in image_urls:
-    try:
-        child_id = create_image_container(image_url)
-        child_ids.append(child_id)
-        time.sleep(2)
-    except Exception as e:
-        print("SKIP IMAGE:", image_url)
-        print("SKIP REASON:", e)
-        continue
+        try:
+            child_id = create_image_container(image_url)
+            child_ids.append(child_id)
+            time.sleep(2)
+        except Exception as e:
+            print("SKIP IMAGE:", image_url)
+            print("SKIP REASON:", e)
 
-if not child_ids:
-    raise Exception("All image containers failed")
+    if not child_ids:
+        raise Exception("All image containers failed")
 
-        creation_id = create_carousel_container(post_text, child_ids)
+    creation_id = create_carousel_container(post_text, child_ids)
 
     time.sleep(5)
 
