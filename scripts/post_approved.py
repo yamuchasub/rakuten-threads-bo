@@ -153,7 +153,9 @@ def get_selected_image_urls(product):
 
 def create_image_container(image_url):
     url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
-
+    
+    print("IMAGE URL:", image_url)
+    
     payload = {
         "media_type": "IMAGE",
         "image_url": image_url,
