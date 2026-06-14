@@ -266,7 +266,6 @@ def reply_with_affiliate(parent_post_id, affiliate_url):
 
     return publish_container(creation_id)
 
-
 def update_product_posted(item_code, threads_post_id=None, status="posted"):
     url = f"{SUPABASE_URL}/rest/v1/products"
 
@@ -279,8 +278,8 @@ def update_product_posted(item_code, threads_post_id=None, status="posted"):
         "posted_at": datetime.now(timezone.utc).isoformat(),
     }
 
-if threads_post_id:
-    payload["threads_post_id"] = threads_post_id
+    if threads_post_id:
+        payload["threads_post_id"] = threads_post_id
 
     r = requests.patch(
         url,
